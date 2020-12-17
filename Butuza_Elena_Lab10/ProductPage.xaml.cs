@@ -11,28 +11,32 @@ using Butuza_Elena_Lab10.Models;
 namespace Butuza_Elena_Lab10
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class ListPage : ContentPage
+    public partial class ProductPage : ContentPage
     {
-        public ListPage()
+        ShopList sl;
+        public ProductPage(ShopList slist)
         {
-            InitializeComponent();
+               InitializeComponent();
+                sl = slist;
+            
         }
-       
-        async void OnChooseButtonClicked(object sender, EventArgs e)
+        async void OnListViewItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            await Navigation.PushAsync(new ProductPage((ShopList)
-           this.BindingContext)
+
+            Product p;
+            if (e.SelectedItem != null)
             {
-                BindingContext = new Product()
-            });
+                p = e.SelectedItem as Product;
+                var lp = new ListProduct()
+                {
+                    ShopListID = sl.ID,
+                    ProductID = p.ID
+                };
+                await App.Database.SaveListProductAsync(lp);
+                p.ListProducts = new List<ListProduct> { lp };
 
-        }
-        protected override async void OnAppearing()
-        {
-            base.OnAppearing();
-            var shopl = (ShopList)BindingContext;
-
-            listView.ItemsSource = await App.Database.GetListProductsAsync(shopl.ID);
+                await Navigation.PopAsync();
+            }
         }
         async void OnSaveButtonClicked(object sender, EventArgs e)
         {
@@ -47,6 +51,6 @@ namespace Butuza_Elena_Lab10
             await App.Database.DeleteShopListAsync(slist);
             await Navigation.PopAsync();
         }
-
+        
     }
 }
